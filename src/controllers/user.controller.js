@@ -16,7 +16,15 @@ const registerUser = asyncHandler(async (req,res) => {
     // return response
 
    const {fullname,email,username,password} =  req.body
-   console.log("email: ",email);
+//    console.log("email: ",email);
+
+// console.log(req.body) ye niche iska result 
+// [Object: null prototype] {
+//   fullname: 'Monkey D Lufy',
+//   email: 'lufy@luffy.com',
+//   password: '12345678',
+//   username: 'piratking'
+// }
 
    
 
@@ -26,7 +34,7 @@ const registerUser = asyncHandler(async (req,res) => {
     throw new ApiError(400,"All fields are compulsory")
    }
 
-  const existedUser = User.findOne({
+  const existedUser = await User.findOne({
     $or: [{username} , {email}]
    })
 
@@ -35,8 +43,44 @@ const registerUser = asyncHandler(async (req,res) => {
    }
 
   const avatarLocalPath = req.files?.avatar[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage[0].path;
-//    console.log(req.files) i want to see what do i get when i console.log this
+//   const coverImageLocalPath = req.files?.coverImage[0].path;
+
+let coverImageLocalPath;
+if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0){
+    coverImageLocalPath = req.files.coverImage[0].path
+}
+
+
+//    console.log(req.files)
+//  i want to see what do i get when i console.log this 
+// below is the result of above
+// [Object: null prototype] {
+//   avatar: [
+//     {
+//       fieldname: 'avatar',
+//       originalname: 'monkey_d_luffy.jpg',
+//       encoding: '7bit',
+//       mimetype: 'image/jpeg',
+//       destination: './public/temp',
+//       filename: 'monkey_d_luffy.jpg',
+//       path: 'public\\temp\\monkey_d_luffy.jpg',
+//       size: 474374
+//     }
+//   ],
+//   coverImage: [
+//     {
+//       fieldname: 'coverImage',
+//       originalname: 'luffy.jpg',
+//       encoding: '7bit',
+//       mimetype: 'image/jpeg',
+//       destination: './public/temp',
+//       filename: 'luffy.jpg',
+//       path: 'public\\temp\\luffy.jpg',
+//       size: 639971
+//     }
+//   ]
+// }
+
 
 if(!avatarLocalPath) {
     throw new ApiError(400,"Avatar file is required")
@@ -55,7 +99,7 @@ const user = await User.create({
     coverImage: coverImage?.url || "",
     email,
     password,
-    username: username.toLowercase()
+    username: username.toLowerCase()
 })
 
 const createdUser = await User.findById(user._id).select(
