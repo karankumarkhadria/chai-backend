@@ -191,8 +191,12 @@ const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set: {
-                refreshToken: undefined
+            // $set: {
+            //     refreshToken: undefined
+            // }
+
+            $unset: {
+                refreshToken: 1 //this removes the field from document
             }
         },
         {
@@ -287,7 +291,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         throw new ApiError(400, "All fields are required")
     }
 
-    const user = User.findByIdAndDelete(
+    const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
@@ -459,17 +463,18 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                             from: "users",
                             localField: "owner",
                             foreignField: "_id",
-                            as: "owner"
-                        },
-                        pipeline: [
-                            {
-                                $project: {
-                                    fullname: 1,
-                                    username: 1,
-                                    avatar: 1
+                            as: "owner",
+
+                            pipeline: [
+                                {
+                                    $project: {
+                                        fullname: 1,
+                                        username: 1,
+                                        avatar: 1
+                                    }
                                 }
-                            }
-                        ]
+                            ]
+                        },
                     },
                     {
                         $addFields: {
@@ -484,14 +489,14 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     ])
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(
-            200,
-            user[0].watchHistory,
-            "watch History fetched successfully"
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                user[0].watchHistory,
+                "watch History fetched successfully"
+            )
         )
-    )
 })
 
 export {
